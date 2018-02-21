@@ -3,24 +3,27 @@ import {Map, InfoWindow, Marker, GoogleApiWrapper} from 'google-maps-react';
 
 export class MapComponent extends React.Component {
   state = {
-    data:[]
+    data:[],
+    origin:'indore',
+    destination:'dewas',
+    distance:''
   }
-  getDirections=(e)=>
+  onButtonClick=(e)=>
   {
     this.calculateDistance()
-    const {google} = this.props;
-    const directionsService = new google.maps.DirectionsService();
-    const directionsDisplay = new google.maps.DirectionsRenderer();
+    this.getDirections()
+  }
+  getDirections=()=>
+  {
     var request = {
     origin: this.state.origin,
     destination: this.state.destination,
     travelMode: 'DRIVING'
-  };
-  directionsService.route(request, function(result, status) {
-    console.log(result)
+    };
+  this.directionsService.route(request, (result, status)=> {
+    console.log(result, 'status ', status)
     if (status === 'OK') {
-      directionsDisplay.setDirections(result);
-      //this.setState({data:result})
+      this.directionsDisplay.setDirections(result);
     }
     else
     {
@@ -39,11 +42,12 @@ export class MapComponent extends React.Component {
          unitSystem: google.maps.UnitSystem.METRIC,
          avoidHighways: false,
          avoidTolls: false
-       }, function(response, status) {
+       }, (response, status)=> {
          if (status !== 'OK') {
            alert('Error was: ' + status);
          } else {
            console.log('distance response ', response.rows[0].elements[0].distance.text)
+           this.setState({distance:response.rows[0].elements[0].distance.text})
            /*var originList = response.originAddresses;
            var destinationList = response.destinationAddresses;
            var outputDiv = document.getElementById('output');
@@ -82,19 +86,16 @@ export class MapComponent extends React.Component {
        });
   }
   componentDidMount=()=> {
-    console.log(this)
     this.google = this.props.google
-    console.log(this.google)
-  /*  this.directionsService = new google.maps.DirectionsService();
-    this.directionsDisplay = new google.maps.DirectionsRenderer();*/
+    console.log(this)
   }
   onMapReady=(mapProps, map)=>
   {
-    console.log("Map is ready dude!!" , mapProps, map)
-      const {google} = this.props;
-    const directionsDisplay = new google.maps.DirectionsRenderer();
-    directionsDisplay.setMap(map)
-
+    this.map = map
+    const {google} = this.props;
+    this.directionsService = new google.maps.DirectionsService();
+    this.directionsDisplay = new google.maps.DirectionsRenderer();
+    this.directionsDisplay.setMap(map)
   }
 render() {
   if (!this.props.loaded) {
@@ -107,10 +108,13 @@ render() {
         </div>
         <div>
           Origin:
-          <input onChange ={(e)=>this.setState({origin: e.target.value})}/>
+          <input value={this.state.origin}
+            onChange ={(e)=>this.setState({origin: e.target.value})}/>
           Destination:
-          <input onChange = { (e) => this.setState({destination: e.target.value})}/>
-          <button onClick = {()=>this.getDirections()}> Get Directions</button>
+          <input
+            value={this.state.destination}
+            onChange = { (e) => this.setState({destination: e.target.value})}/>
+          <button onClick = {()=>this.onButtonClick()}> Get Directions</button>
         </div>
       <Map google={this.props.google} zoom={14} onReady={this.onMapReady}>
 
